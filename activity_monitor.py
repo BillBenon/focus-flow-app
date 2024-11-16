@@ -5,6 +5,8 @@ import win32process
 import psutil
 import time
 
+from scipy.spatial import distance
+
 
 class ActivityMonitor:
     def __init__(self, config, database):
