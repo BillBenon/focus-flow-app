@@ -1,7 +1,10 @@
 import sys
 import os
 from datetime import datetime
+import time
 import threading
+from tkinter import messagebox
+
 import cv2
 import win32gui
 import win32con
@@ -12,6 +15,12 @@ import win32serviceutil
 import win32service
 import win32event
 import servicemanager
+from tqdm import tk
+
+from activity_monitor import ActivityMonitor
+from config import Config
+from fatigue_detection import FatigueDetector
+from gui import WellnessMonitorGUI
 
 
 class WellnessMonitorService(win32serviceutil.ServiceFramework):
@@ -39,6 +48,7 @@ class WellnessMonitorService(win32serviceutil.ServiceFramework):
 class WellnessMonitorApp:
     def __init__(self):
         self.config = Config()
+        from database import Database
         self.database = Database(self.config.stats_file)
         self.fatigue_detector = FatigueDetector(self.config)
         self.activity_monitor = ActivityMonitor(self.config, self.database)
@@ -120,6 +130,14 @@ class WellnessMonitorApp:
 
         # Start system tray
         self.system_tray.run()
+
+    def get_camera_frame(self):
+        cap = cv2.VideoCapture(0)
+        if cap.isOpened():
+            ret, frame = cap.read()
+            cap.release()
+            return frame if ret else None
+        return None
 
     def monitor_camera(self):
         while self.running:
